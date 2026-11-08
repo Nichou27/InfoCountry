@@ -4,7 +4,7 @@ Aplicación web destinada a buscar información acerca de diferentes países del
 
 ## Stack
 
-Python + librería [Flask]
+Python + librería Flask
 
 ##  Cómo empezar
 
@@ -56,7 +56,7 @@ pip install Flask
 flask --app src/app run
 ```
 
-En caso de necesitar más información consultar la [documentación oficial]([Flask]: https://flask.palletsprojects.com/en/stable/installation/)
+En caso de necesitar más información consultar la [documentación oficial]: https://flask.palletsprojects.com/en/stable/installation/
 
 ## Autor
 
