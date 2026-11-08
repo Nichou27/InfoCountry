@@ -56,7 +56,9 @@ pip install Flask
 flask --app src/app run
 ```
 
-En caso de necesitar más información consultar la [documentación oficial]: https://flask.palletsprojects.com/en/stable/installation/
+En caso de necesitar más información consultar la [documentación oficial] 
+
+[documentación oficial]: https://flask.palletsprojects.com/en/stable/installation/
 
 ## Autor
 
