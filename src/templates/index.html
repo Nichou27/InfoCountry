@@ -1,10 +1,157 @@
 <!doctype html>
-<html>
-  <head>
-  </head>
-  <body>
-    <h1>
-      Hello, Flask!
-    </h1>
-  </body>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InfoCountry</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f7f7; }
+    h1, h2 { color: #333; }
+    .container { max-width: 1100px; margin: auto; }
+    .card { background: #fff; padding: 16px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,.1); }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .col { flex: 1; min-width: 280px; }
+    input, select, button { padding: 8px; margin: 4px 0; width: 100%; box-sizing: border-box; }
+    button { background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
+    th { background: #eee; }
+    .msg { padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .stats li { margin: 4px 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>InfoCountry</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="msg {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="row">
+    <div class="col card">
+      <h2>Agregar país</h2>
+      <form method="post" action="{{ url_for('add') }}">
+        <input name="name" placeholder="Nombre" required>
+        <input name="population" type="number" placeholder="Población" required>
+        <input name="surface" type="number" placeholder="Superficie" required>
+        <input name="continent" placeholder="Continente" required>
+        <button type="submit">Agregar</button>
+      </form>
+    </div>
+
+    <div class="col card">
+      <h2>Actualizar población y superficie</h2>
+      <form method="post" action="{{ url_for('update') }}">
+        <input name="name" placeholder="Nombre del país" required>
+        <input name="population" type="number" placeholder="Nueva población" required>
+        <input name="surface" type="number" placeholder="Nueva superficie" required>
+        <button type="submit">Actualizar</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Buscar y filtrar</h2>
+    <form method="get" action="{{ url_for('index') }}">
+      <div class="row">
+        <div class="col">
+          <input name="q" placeholder="Buscar por nombre" value="{{ q }}">
+        </div>
+        <div class="col">
+          <select name="continent">
+            <option value="">Todos los continentes</option>
+            {% for c in continents %}
+              <option value="{{ c }}" {% if c == continent %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col">
+          <input name="pop_min" type="number" placeholder="Población mínima" value="{{ pop_min }}">
+        </div>
+        <div class="col">
+          <input name="pop_max" type="number" placeholder="Población máxima" value="{{ pop_max }}">
+        </div>
+        <div class="col">
+          <input name="surf_min" type="number" placeholder="Superficie mínima" value="{{ surf_min }}">
+        </div>
+        <div class="col">
+          <input name="surf_max" type="number" placeholder="Superficie máxima" value="{{ surf_max }}">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <select name="sort">
+            <option value="">Sin ordenar</option>
+            <option value="nombre" {% if sort_by == 'nombre' %}selected{% endif %}>Nombre</option>
+            <option value="poblacion" {% if sort_by == 'poblacion' %}selected{% endif %}>Población</option>
+            <option value="superficie" {% if sort_by == 'superficie' %}selected{% endif %}>Superficie</option>
+          </select>
+        </div>
+        <div class="col">
+          <select name="order">
+            <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascendente</option>
+            <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descendente</option>
+          </select>
+        </div>
+        <div class="col">
+          <button type="submit">Aplicar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Países</h2>
+    {% if countries %}
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Población</th>
+            <th>Superficie</th>
+            <th>Continente</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in countries %}
+            <tr>
+              <td>{{ c[0] }}</td>
+              <td>{{ c[1] }}</td>
+              <td>{{ c[2] }}</td>
+              <td>{{ c[3] }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No se encontraron resultados.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Estadísticas</h2>
+    <ul class="stats">
+      <li><strong>País con mayor población:</strong>
+        {% if most %}{{ most[0] }} ({{ most[1] }}){% else %}N/A{% endif %}</li>
+      <li><strong>País con menor población:</strong>
+        {% if least %}{{ least[0] }} ({{ least[1] }}){% else %}N/A{% endif %}</li>
+      <li><strong>Promedio de población:</strong> {{ avg_pop }}</li>
+      <li><strong>Promedio de superficie:</strong> {{ avg_surf }}</li>
+      <li><strong>Países por continente:</strong>
+        {% for cont, count in per_continent.items() %}
+          {{ cont }}: {{ count }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+      </li>
+    </ul>
+  </div>
+</div>
+</body>
 </html>
