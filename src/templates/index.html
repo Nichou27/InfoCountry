@@ -116,7 +116,7 @@
           <tr>
             <th>Nombre</th>
             <th>Población</th>
-            <th>Superficie</th>
+            <th>Superficie(km²)</th>
             <th>Continente</th>
           </tr>
         </thead>
@@ -144,7 +144,7 @@
       <li><strong>País con menor población:</strong>
         {% if least %}{{ least[0] }} ({{ least[1] }}){% else %}N/A{% endif %}</li>
       <li><strong>Promedio de población:</strong> {{ avg_pop }}</li>
-      <li><strong>Promedio de superficie:</strong> {{ avg_surf }}</li>
+      <li><strong>Promedio de superficie:</strong> {{ avg_surf }}km²</li>
       <li><strong>Países por continente:</strong>
         {% for cont, count in per_continent.items() %}
           {{ cont }}: {{ count }}{% if not loop.last %}, {% endif %}

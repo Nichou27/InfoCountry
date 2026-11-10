@@ -21,10 +21,11 @@ def _csv_path():
     return candidates[1]
 
 
-def _read_countries() -> list[str, int, int, str]:
+def _read_countries() -> list:
     """Lee el CSV y devuelve una lista de países.
 
     Cada país se representa como [nombre, poblacion, superficie, continente].
+    En caso de no haber países en el archivo, devuelve una lista vacía.
     """
     path = _csv_path()
     countries = []
@@ -115,21 +116,15 @@ def add_country(
 
 
 def update_population_and_surface(
-        population=None,
-        surface=None,
-        name=None
+        name: str,
+        population: int,
+        surface: str
 ) -> int:
     """
     Esta función valida los datos de entrada y, si son válidos,
     actualiza los datos del país. Retorna 0 si la operación fue
     exitosa o 1 si la operación falló
     """
-
-    # Reordenar si se llamó como update_population_and_surface(name, population, surface)
-    if isinstance(population, str) and isinstance(surface, int) and isinstance(name, int):
-        name, population, surface = population, surface, name
-
-    # Validación básica
     try:
         if name is not None:
             name = validate_string(name)
@@ -139,10 +134,6 @@ def update_population_and_surface(
         return 1
 
     countries = _read_countries()
-
-    # Si no se indica país, solo se valida (comportamiento del esqueleto original)
-    if name is None:
-        return 0
 
     updated = False
     for country in countries:
@@ -158,37 +149,55 @@ def update_population_and_surface(
     return 0
 
 
-def search_country_by_name(name: str) -> None:
-    """Busca países por nombre. Retorna None"""
-    if not isinstance(name, str):
+def search_country_by_name(name: str) -> list | None:
+    """Busca países por nombre. Devuelve una lista
+    con coincidencias exactas o parciales. De otra
+    manera, devuelve None.
+    """
+    try:
+        name = validate_string(name)
+    except ValueError:
         return None
-    for country in _read_countries():
-        if country[0].lower() == name.strip().lower():
-            return list(country)
-    return None
+    
+    countries = _read_countries()
+    result = []
+    for country in countries:
+        if name.lower() in country[0].lower():
+            result.append(country)
+
+    return result
 
 
 def search_countries_by_continent(continent: str) -> list:
     """Busca países por continente. Retorna una lista
     de países o una lista vacía. 
     """
-    if not isinstance(continent, str):
+    try:
+        continent = validate_string(continent)
+    except ValueError:
         return []
-    return [
-        list(country)
-        for country in _read_countries()
-        if country[3].lower() == continent.strip().lower()
-    ]
+
+    countries = _read_countries()
+    result = []
+    for country in countries:
+        if continent.lower() == country[3].lower():
+            result.append(country)
+
+    return result
 
 
-def search_countries_by_population_range(population, max_population=None) -> list:
+def search_countries_by_population_range(
+        min_population=None,
+        max_population=None
+) -> list:
     """Busca países por rango de población. Retorna la lista de países
     o una lista vacía.
     """
-    try:
-        population = validate_integer(population)
-    except (ValueError, TypeError):
-        return []
+    if min_population is not None:
+        try:
+            min_population = validate_integer(min_population)
+        except (ValueError, TypeError):
+            return []
 
     if max_population is not None:
         try:
@@ -196,22 +205,29 @@ def search_countries_by_population_range(population, max_population=None) -> lis
         except (ValueError, TypeError):
             return []
 
+    countries = _read_countries()
     result = []
-    for country in _read_countries():
-        if country[1] >= population and (max_population is None or country[1] <= max_population):
-            result.append(list(country))
+    for country in countries:
+        if (max_population is not None) and (country[1] <= max_population):
+            result.append(country)
+        elif (min_population is not None) and (country[1] >= min_population):
+            result.append(country)
+
     return result
 
 
-def search_countries_by_surface_range(surface, max_surface=None) -> list:
+def search_countries_by_surface_range(
+        min_surface=None,
+        max_surface=None
+) -> list:
     """Busca países por rango de superficie. Retorna la lista de países
     o una lista vacía.
     """
-
-    try:
-        surface = validate_integer(surface)
-    except (ValueError, TypeError):
-        return []
+    if min_surface is not None:
+        try:
+            min_surface = validate_integer(min_surface)
+        except (ValueError, TypeError):
+            return []
 
     if max_surface is not None:
         try:
@@ -219,10 +235,14 @@ def search_countries_by_surface_range(surface, max_surface=None) -> list:
         except (ValueError, TypeError):
             return []
 
+    countries = _read_countries()
     result = []
-    for country in _read_countries():
-        if country[2] >= surface and (max_surface is None or country[2] <= max_surface):
-            result.append(list(country))
+    for country in countries:
+        if (min_surface is not None) and (country[2] >= min_surface):
+            result.append(country)
+        elif (max_surface is not None) and (country[2] <= max_surface):
+            result.append(country)
+            
     return result
 
 
@@ -234,6 +254,7 @@ def country_with_most_population() -> list | None:
     countries = _read_countries()
     if not countries:
         return None
+    
     return list(max(countries, key=lambda c: c[1]))
 
 
@@ -258,11 +279,27 @@ def average_population() -> int:
         return 0
     return int(sum(c[1] for c in countries) / len(countries))
 
+def average_surface() -> int:
+    """Calcula el promedio de la superficie de todos los
+    países cargados y devuelve el valor total. Si no hay
+    países, devuelve 0.
+    """
+    countries = _read_countries()
+    if not countries:
+        return 0
+
+    total = 0
+    for country in countries:
+        total += country[2]
+
+    return int(total / len(countries))
 
 def countries_per_continent() -> dict:
     """Devuelve un diccionario con los continentes
     como clave y la cantidad de países en ellos
-    como valor. 
+    como valor. En caso de no existir países cargados
+    en el archivo .csv, la función devolverá un
+    diccionario vacío.
     """
     result = {}
     for country in _read_countries():
