@@ -306,3 +306,20 @@ def countries_per_continent() -> dict:
         continent = country[3]
         result[continent] = result.get(continent, 0) + 1
     return result
+
+def sort_countries(sort=None, order=None) -> None:
+    """Recibe como parámetros el tipo de ordenamiento
+    que debe llevar a cabo. Siempre retorna None. 
+    """
+    countries = _read_countries()
+    
+    if sort in ("nombre", "poblacion", "superficie"):
+        reverse = order == "desc"
+        key_map = {
+            "nombre": lambda c: c[0].lower(),
+            "poblacion": lambda c: c[1],
+            "superficie": lambda c: c[2],
+        }
+
+    return sorted(countries, key=key_map[sort], reverse=reverse)
+
