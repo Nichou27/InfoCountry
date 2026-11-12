@@ -312,7 +312,9 @@ def sort_countries(sort=None, order=None) -> None:
     que debe llevar a cabo. Siempre retorna None. 
     """
     countries = _read_countries()
-    
+    if not sort:
+        return countries
+
     if sort in ("nombre", "poblacion", "superficie"):
         reverse = order == "desc"
         key_map = {
