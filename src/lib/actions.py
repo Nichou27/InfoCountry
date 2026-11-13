@@ -97,6 +97,13 @@ def add_country(
     except (ValueError, TypeError):
         return 1
 
+    countries = _read_countries()
+
+    # Nos aseguramos que el país no se encuentre cargado
+    for country in countries:
+        if country[0] == name:
+            return 1
+
     path = _csv_path()
     try:
         # Asegurar salto de línea final antes de agregar
