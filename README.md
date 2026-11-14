@@ -29,7 +29,7 @@ source .venv/bin/activate
 pip install Flask
 
 # Ejecutar en el navegador 
-flask --app src/app run
+flask --app src/app run --debug
 ```
 
 ### Windows
@@ -44,16 +44,16 @@ git clone https://github.com/Nichou27/InfoCountry.git
 cd InfoCountry 
 
 # Crear entorno virtual 
-py -3 -m venv .venv
+py -m venv .venv
 
 # Activar entorno
-.venv\Scripts\activate
+source .venv\bin\activate
 
 # Instalar Flask
 pip install Flask
 
 # Ejecutar en el navegador 
-flask --app src/app run
+flask --app src/app run --debug
 ```
 
 En caso de necesitar más información consultar la [documentación oficial] 
