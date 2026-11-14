@@ -6,135 +6,483 @@
   <title>InfoCountry</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
-<div class="container">
-  <h1>InfoCountry</h1>
+{% set initial_panel = 'search' if q or continent or pop_min or pop_max or surf_min or surf_max or sort_by else 'countries' %}
+<body data-initial-panel="{{ initial_panel }}">
+  <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="msg {{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  <div class="row">
-    <div class="col card">
-      <h2>Agregar país</h2>
-      <form method="post" action="{{ url_for('add') }}">
-        <input name="name" placeholder="Nombre" required>
-        <input name="population" type="number" placeholder="Población" required>
-        <input name="surface" type="number" placeholder="Superficie" required>
-        <input name="continent" placeholder="Continente" required>
-        <button type="submit">Agregar</button>
-      </form>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand" aria-label="InfoCountry">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="#14b8a6" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      <span>InfoCountry</span>
     </div>
 
-    <div class="col card">
-      <h2>Actualizar población y superficie</h2>
-      <form method="post" action="{{ url_for('update') }}">
-        <input name="name" placeholder="Nombre del país" required>
-        <input name="population" type="number" placeholder="Nueva población" required>
-        <input name="surface" type="number" placeholder="Nueva superficie" required>
-        <button type="submit">Actualizar</button>
-      </form>
+    <nav class="sidebar-nav" aria-label="Menú principal">
+      <p class="nav-section">Explorar</p>
+      <button type="button" class="nav-item" data-panel-target="countries" aria-controls="panel-countries">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <span>Países</span>
+      </button>
+      <button type="button" class="nav-item" data-panel-target="search" aria-controls="panel-search">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <span>Buscar y filtrar</span>
+      </button>
+
+      <p class="nav-section">Administrar</p>
+      <button type="button" class="nav-item" data-panel-target="add" aria-controls="panel-add">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>
+        <span>Agregar país</span>
+      </button>
+      <button type="button" class="nav-item" data-panel-target="update" aria-controls="panel-update">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        <span>Actualizar país</span>
+      </button>
+
+      <p class="nav-section">Informes</p>
+      <button type="button" class="nav-item" data-panel-target="stats" aria-controls="panel-stats">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 11.5v3h3v-2.75l-2.07-2.08zm5.75-4.12l-2.53-2.53 1.41-1.41L18 10.55V14h-3.45l-2.12-2.13z"/></svg>
+        <span>Estadísticas</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>Datos disponibles localmente</span>
+      </div>
     </div>
-  </div>
+  </aside>
 
-  <div class="card">
-    <h2>Buscar y filtrar</h2>
-    <form method="get" action="{{ url_for('index') }}">
-      <div class="row">
-        <div class="col">
-          <input name="q" placeholder="Buscar por nombre" value="{{ q }}">
-        </div>
-        <div class="col">
-          <select name="continent">
-            <option value="">Todos los continentes</option>
-            {% for c in continents %}
-              <option value="{{ c }}" {% if c == continent %}selected{% endif %}>{{ c }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col">
-          <input name="pop_min" type="number" placeholder="Población mínima" value="{{ pop_min }}">
-        </div>
-        <div class="col">
-          <input name="pop_max" type="number" placeholder="Población máxima" value="{{ pop_max }}">
-        </div>
-        <div class="col">
-          <input name="surf_min" type="number" placeholder="Superficie mínima" value="{{ surf_min }}">
-        </div>
-        <div class="col">
-          <input name="surf_max" type="number" placeholder="Superficie máxima" value="{{ surf_max }}">
+  <div class="app-shell">
+    <header class="topbar" id="topbar">
+      <div class="topbar-start">
+        <button class="menu-toggle" id="menu-toggle" aria-controls="sidebar" aria-expanded="false">
+          <span class="menu-icon"></span>
+        </button>
+        <div class="topbar-brand">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#14b8a6" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <div><strong>InfoCountry</strong><span class="topbar-subtitle">Directorio de países</span></div>
         </div>
       </div>
-      <div class="row">
-        <div class="col">
-          <select name="sort">
-            <option value="">Sin ordenar</option>
-            <option value="nombre" {% if sort_by == 'nombre' %}selected{% endif %}>Nombre</option>
-            <option value="poblacion" {% if sort_by == 'poblacion' %}selected{% endif %}>Población</option>
-            <option value="superficie" {% if sort_by == 'superficie' %}selected{% endif %}>Superficie</option>
-          </select>
-        </div>
-        <div class="col">
-          <select name="order">
-            <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascendente</option>
-            <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descendente</option>
-          </select>
-        </div>
-        <div class="col">
-          <button type="submit">Aplicar</button>
-        </div>
-      </div>
-    </form>
-  </div>
+      <div class="topbar-title"><strong id="current-page-label">Países</strong></div>
+      <div class="topbar-meta"><span>Datos locales</span></div>
+    </header>
 
-  <div class="card">
-    <h2>Países</h2>
-    {% if countries %}
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Población</th>
-            <th>Superficie(km²)</th>
-            <th>Continente</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for c in countries %}
-            <tr>
-              <td>{{ c[0] }}</td>
-              <td>{{ c[1] }}</td>
-              <td>{{ c[2] }}</td>
-              <td>{{ c[3] }}</td>
-            </tr>
+    <main id="main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash--{{ category }}" role="{{ 'status' if category == 'success' else 'alert' }}" aria-live="polite">
+              <span>{{ message }}</span>
+              <button type="button" class="flash-dismiss" data-dismiss-alert aria-label="Cerrar aviso">×</button>
+            </div>
           {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p>No se encontraron resultados.</p>
-    {% endif %}
+        {% endif %}
+      {% endwith %}
+
+      {% macro country_table(rows) %}
+      <div class="table-card">
+        <table role="grid" aria-label="Listado de países">
+          <caption class="sr-only">{{ rows|length }} registro{{ 's' if rows|length != 1 else '' }} en el directorio</caption>
+          <thead>
+            <tr>
+              <th scope="col">País</th>
+              <th scope="col">Población</th>
+              <th scope="col">Superficie</th>
+              <th scope="col">Continente</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in rows %}
+            <tr>
+              <td data-label="País">
+                <span class="country-monogram" aria-hidden="true">{{ c[0][:1]|upper }}</span>
+                <strong>{{ c[0] }}</strong>
+              </td>
+              <td data-label="Población">{{ "{:,}".format(c[1]) }}</td>
+              <td data-label="Superficie">{{ "{:,}".format(c[2]) }} km²</td>
+              <td data-label="Continente">{{ c[3] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if not rows %}
+        <div class="empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path fill="#94a3b8" d="M9 6H3v18h18V6H9zM9 4c-.6 0-1 .4-1 1v16c0 .6.4 1 1 1s1-.4 1-1V5c0-.6-.4-1-1-1zm7 0c-.6 0-1 .4-1 1v16c0 .6.4 1 1 1s1-.4 1-1V5c0-.6-.4-1-1-1z"/></svg>
+          <p>No se encontraron países.</p>
+        </div>
+        {% endif %}
+      </div>
+      {% endmacro %}
+
+      <section class="panel {% if initial_panel == 'countries' %}is-active{% else %}hidden{% endif %}" id="panel-countries" data-panel="countries">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Directorio</p>
+            <h1 data-panel-heading>Países registrados</h1>
+            <p>Lista completa de países almacenados en el archivo local.</p>
+          </div>
+          <div class="head-actions">
+            <button type="button" class="button button--outline" data-panel-target="search">Buscar y filtrar</button>
+            <a href="{{ url_for('add') }}" class="button button--primary">Agregar país</a>
+          </div>
+        </div>
+
+        <div class="metric-strip">
+          <div class="metric">
+            <span class="metric-value">{{ countries|length }}</span>
+            <span class="metric-label">Países registrados</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ per_continent|length }}</span>
+            <span class="metric-label">Continentes representados</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ "{:,}".format(avg_pop) }}</span>
+            <span class="metric-label">Población media</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ "{:,}".format(avg_surf) }}</span>
+            <span class="metric-label">Superficie media (km²)</span>
+          </div>
+        </div>
+
+        {{ country_table(countries) }}
+      </section>
+
+      <section class="panel {% if initial_panel == 'search' %}is-active{% else %}hidden{% endif %}" id="panel-search" data-panel="search">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Buscador</p>
+            <h1 data-panel-heading>Buscar y filtrar países</h1>
+            <p>Encuentre países por nombre, continente, población o superficie.</p>
+          </div>
+          <div class="head-actions">
+            <button type="button" class="button button--outline" data-panel-target="countries">Volver al directorio</button>
+          </div>
+        </div>
+
+        <form method="get" action="{{ url_for('index') }}" class="filter-form">
+          <div class="filter-grid">
+            <div class="field field--wide">
+              <label class="field-label">Buscar por nombre</label>
+              <input name="q" placeholder="Ej. Argentina" value="{{ q }}">
+            </div>
+
+            <div class="field">
+              <label class="field-label">Continente</label>
+              <select name="continent">
+                <option value="">Todos los continentes</option>
+                {% for c in continents %}
+                  <option value="{{ c }}" {% if c == continent %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <fieldset class="range-group">
+            <legend class="range-legend">Población</legend>
+            <div class="field pairs">
+              <input name="pop_min" type="number" min="0" placeholder="Mínima" value="{{ pop_min }}">
+              <input name="pop_max" type="number" min="0" placeholder="Máxima" value="{{ pop_max }}">
+            </div>
+          </fieldset>
+
+          <fieldset class="range-group">
+            <legend class="range-legend">Superficie (km²)</legend>
+            <div class="field pairs">
+              <input name="surf_min" type="number" min="0" placeholder="Mínima" value="{{ surf_min }}">
+              <input name="surf_max" type="number" min="0" placeholder="Máxima" value="{{ surf_max }}">
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label class="field-label">Ordenar por</label>
+            <select name="sort">
+              <option value="" {% if not sort_by %}selected{% endif %}>Sin ordenar</option>
+              <option value="nombre" {% if sort_by == 'nombre' %}selected{% endif %}>Nombre</option>
+              <option value="poblacion" {% if sort_by == 'poblacion' %}selected{% endif %}>Población</option>
+              <option value="superficie" {% if sort_by == 'superficie' %}selected{% endif %}>Superficie</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Orden</label>
+            <select name="order">
+              <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascendente</option>
+              <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descendente</option>
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="button button--primary">Aplicar filtros</button>
+            <a href="{{ url_for('index') }}" class="button button--ghost">Limpiar filtros</a>
+          </div>
+        </form>
+
+        {{ country_table(countries) }}
+      </section>
+
+      <section class="panel hidden" id="panel-add" data-panel="add">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Administrar</p>
+            <h1 data-panel-heading>Agregar país</h1>
+            <p>Ingrese los datos del nuevo país. El nombre y continente se validan como texto.</p>
+          </div>
+          <div class="head-actions">
+            <button type="button" class="button button--outline" data-panel-target="countries">Volver al directorio</button>
+          </div>
+        </div>
+
+        <form method="post" action="{{ url_for('add') }}" class="add-form">
+          <div class="form-grid">
+            <div class="field field--wide">
+              <label class="field-label">Nombre del país</label>
+              <input name="name" placeholder="Ej. Argentina" required autocomplete="off">
+            </div>
+
+            <div class="field">
+              <label class="field-label">Población</label>
+              <input name="population" type="number" min="0" placeholder="Población" required inputmode="numeric">
+            </div>
+
+            <div class="field">
+              <label class="field-label">Superficie (km²)</label>
+              <input name="surface" type="number" min="0" placeholder="Superficie" required inputmode="numeric">
+            </div>
+
+            <div class="field field--wide">
+              <label class="field-label">Continente</label>
+              <input name="continent" placeholder="Ej. América del Sur" list="continent-options" required autocomplete="off">
+              <datalist id="continent-options">
+                {% for c in continents %}
+                  <option value="{{ c }}">
+                {% endfor %}
+              </datalist>
+            </div>
+          </div>
+
+          <div class="form-actions form-actions--end">
+            <button type="button" class="button button--ghost" data-panel-target="countries">Cancelar</button>
+            <button type="submit" class="button button--primary">Guardar país</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel hidden" id="panel-update" data-panel="update">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Administrar</p>
+            <h1 data-panel-heading>Actualizar país</h1>
+            <p>Busque el país por nombre y actualice su población y superficie.</p>
+          </div>
+          <div class="head-actions">
+            <button type="button" class="button button--outline" data-panel-target="countries">Volver al directorio</button>
+          </div>
+        </div>
+
+        <form method="post" action="{{ url_for('update') }}" class="add-form">
+          <div class="form-grid">
+            <div class="field field--wide">
+              <label class="field-label">Nombre del país</label>
+              <input name="name" placeholder="Ej. Argentina" required autocomplete="off">
+            </div>
+
+            <div class="field">
+              <label class="field-label">Nueva población</label>
+              <input name="population" type="number" min="0" placeholder="Población" required inputmode="numeric">
+            </div>
+
+            <div class="field">
+              <label class="field-label">Nueva superficie (km²)</label>
+              <input name="surface" type="number" min="0" placeholder="Superficie" required inputmode="numeric">
+            </div>
+          </div>
+
+          <div class="form-actions form-actions--end">
+            <button type="button" class="button button--ghost" data-panel-target="countries">Cancelar</button>
+            <button type="submit" class="button button--primary">Actualizar datos</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel hidden" id="panel-stats" data-panel="stats">
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Informes</p>
+            <h1 data-panel-heading>Estadísticas</h1>
+            <p>Resumen general calculado sobre todos los países registrados.</p>
+          </div>
+          <div class="head-actions">
+            <button type="button" class="button button--outline" data-panel-target="countries">Volver al directorio</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card stat-card--most">
+            <span class="stat-label">Mayor población</span>
+            <span class="stat-value">{{ most[0] if most else '—' }}</span>
+            <span class="stat-detail">{{ "{:,}".format(most[1]) if most else 'N/A' }} habitantes</span>
+          </div>
+
+          <div class="stat-card stat-card--least">
+            <span class="stat-label">Menor población</span>
+            <span class="stat-value">{{ least[0] if least else '—' }}</span>
+            <span class="stat-detail">{{ "{:,}".format(least[1]) if least else 'N/A' }} habitantes</span>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Población media</span>
+            <span class="stat-value">{{ "{:,}".format(avg_pop) }}</span>
+            <span class="stat-detail">habitantes por país</span>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Superficie media</span>
+            <span class="stat-value">{{ "{:,}".format(avg_surf) }}</span>
+            <span class="stat-detail">km² por país</span>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <h2 class="card-heading">Países por continente</h2>
+          <table role="grid" aria-label="Distribución por continente">
+            <thead>
+              <tr>
+                <th scope="col">Continente</th>
+                <th scope="col">Países</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cont, count in per_continent.items() %}
+              <tr>
+                <td data-label="Continente">{{ cont }}</td>
+                <td data-label="Países">{{ count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% if not per_continent %}
+          <div class="empty-state"><p>No hay continentes registrados.</p></div>
+          {% endif %}
+        </div>
+      </section>
+
+      <footer class="app-footer" role="contentinfo">
+        <span>InfoCountry</span>
+        <span>· Ignacio Gonzalez Acuña</span>
+      </footer>
+    </main>
   </div>
 
-  <div class="card">
-    <h2>Estadísticas</h2>
-    <ul class="stats">
-      <li><strong>País con mayor población:</strong>
-        {% if most %}{{ most[0] }} ({{ most[1] }}){% else %}N/A{% endif %}</li>
-      <li><strong>País con menor población:</strong>
-        {% if least %}{{ least[0] }} ({{ least[1] }}){% else %}N/A{% endif %}</li>
-      <li><strong>Promedio de población:</strong> {{ avg_pop }}</li>
-      <li><strong>Promedio de superficie:</strong> {{ avg_surf }}km²</li>
-      <li><strong>Países por continente:</strong>
-        {% for cont, count in per_continent.items() %}
-          {{ cont }}: {{ count }}{% if not loop.last %}, {% endif %}
-        {% endfor %}
-      </li>
-    </ul>
-  </div>
-</div>
+  <script>
+(() => {
+  const panels = document.querySelectorAll('[data-panel]');
+  const targets = document.querySelectorAll('[data-panel-target]');
+  const pageLabel = document.getElementById('current-page-label');
+  const sidebar = document.getElementById('sidebar');
+  const menuToggle = document.getElementById('menu-toggle');
+  const scrim = document.createElement('div');
+  scrim.className = 'sidebar-scrim';
+  scrim.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(scrim);
+
+  const labels = {
+    countries: 'Países',
+    search: 'Buscar y filtrar',
+    add: 'Agregar país',
+    update: 'Actualizar país',
+    stats: 'Estadísticas'
+  };
+
+  function setPanel(id, { pushHash = true, focus = true, scroll = true } = {}) {
+    const activePanel = document.getElementById(`panel-${id}`);
+
+    panels.forEach(panel => {
+      const isActive = panel.id === `panel-${id}`;
+      panel.hidden = !isActive;
+      panel.classList.toggle('is-active', isActive);
+      if (isActive && panel.hasAttribute('hidden')) panel.removeAttribute('hidden');
+      if (!isActive && !panel.hasAttribute('hidden')) panel.setAttribute('hidden', '');
+    });
+
+    targets.forEach(target => {
+      const isActive = target.dataset.panelTarget === id;
+      target.classList.toggle('is-active', isActive);
+      if (target.matches('button')) {
+        target.setAttribute('aria-current', isActive ? 'page' : 'false');
+      }
+    });
+
+    if (pageLabel) pageLabel.textContent = labels[id] || id;
+    document.title = `${labels[id] || 'InfoCountry'} · InfoCountry`;
+
+    if (pushHash) history.replaceState(null, '', `#${id}`);
+    closeSidebar({ restoreFocus: false });
+
+    if (activePanel && focus) {
+      requestAnimationFrame(() => {
+        activePanel.querySelector('[data-panel-heading]').focus({ preventScroll: true });
+      });
+    }
+
+    if (scroll) {
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+  }
+
+  function openSidebar() {
+    sidebar.classList.add('is-open');
+    menuToggle.setAttribute('aria-expanded', 'true');
+    scrim.removeAttribute('hidden');
+    document.body.classList.add('sidebar-open');
+    const closeButton = sidebar.querySelector('[data-sidebar-close]');
+    if (closeButton) closeButton.focus({ preventScroll: true });
+  }
+
+  function closeSidebar({ restoreFocus = true } = {}) {
+    sidebar.classList.remove('is-open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    scrim.setAttribute('hidden', '');
+    document.body.classList.remove('sidebar-open');
+    if (restoreFocus) menuToggle.focus({ preventScroll: true });
+  }
+
+  menuToggle.addEventListener('click', () => {
+    const expanded = menuToggle.getAttribute('aria-expanded') === 'true';
+    expanded ? closeSidebar() : openSidebar();
+  });
+
+  scrim.addEventListener('click', () => closeSidebar());
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && sidebar.classList.contains('is-open')) closeSidebar();
+  });
+
+  targets.forEach(target => {
+    target.addEventListener('click', () => {
+      setPanel(target.dataset.panelTarget);
+    });
+  });
+
+  window.addEventListener('hashchange', () => {
+    const hash = location.hash.replace('#', '');
+    if (hash && labels[hash]) {
+      setPanel(hash, { pushHash: false });
+    }
+  });
+
+  const initialHash = location.hash.replace('#', '');
+  const initialPanel = initialHash && labels[initialHash] ? initialHash : document.body.dataset.initialPanel || 'countries';
+  setPanel(initialPanel, { pushHash: false, focus: false, scroll: false });
+
+  document.querySelectorAll('[data-dismiss-alert]').forEach(button => {
+    button.addEventListener('click', () => {
+      const flash = button.closest('.flash');
+      if (flash) flash.remove();
+    });
+  });
+})();
+  </script>
 </body>
 </html>
