@@ -1,5 +1,7 @@
 # InfoCountry
 
+![screenshot](./docs/captura-principal.png)
+
 Aplicación web destinada a buscar información acerca de diferentes países del mundo.
 
 ## Stack
@@ -59,6 +61,13 @@ flask --app src/app run --debug
 En caso de necesitar más información consultar la [documentación oficial] 
 
 [documentación oficial]: https://flask.palletsprojects.com/en/stable/installation/
+
+## Diagrama de flujo
+
+El diagrama de flujo está hecho en formato [Mermaid.js]. Se encuentra en el 
+directorio docs/DIAGRAMA_FLUJO.md, en la raíz del proyecto.
+
+[Mermaid.js]: https://mermaid.js.org/
 
 ## Autor
 
