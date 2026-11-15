@@ -64,7 +64,7 @@ En caso de necesitar más información consultar la [documentación oficial].
 
 ## Diagrama de flujo
 
-![screenshot](.docs/captura-diagrama.png)
+![screenshot](./docs/captura-diagrama.png)
 
 El diagrama de flujo está hecho en formato [Mermaid.js]. Se encuentra en el 
 directorio docs/DIAGRAMA_FLUJO.md, en la raíz del proyecto.
