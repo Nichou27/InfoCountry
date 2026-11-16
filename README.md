@@ -46,7 +46,7 @@ git clone https://github.com/Nichou27/InfoCountry.git
 cd InfoCountry 
 
 # Crear entorno virtual 
-py -m venv .venv
+python -m venv .venv
 
 # Activar entorno
 source .venv\bin\activate
@@ -70,6 +70,14 @@ El diagrama de flujo está hecho en formato [Mermaid.js]. Se encuentra en el
 directorio docs/DIAGRAMA_FLUJO.md, en la raíz del proyecto.
 
 [Mermaid.js]: https://mermaid.js.org/
+
+## Video explicativo y documento PDF
+
+El documento .pdf con la documentación y la explicación de todo el proyecto
+se puede encontrar en la raíz del proyecto [aquí](./docs/).
+
+El video explicativo se encuentra subido a Google drive siguiente el enlace
+[video explicativo](https://drive.google.com/file/d/1jus4mcB-h9QrEv2Lo46pv7eZu7_I6Axb/view?usp=drive_link).
 
 ## Autor
 
